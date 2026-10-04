@@ -1,0 +1,47 @@
+name: daily-dragapult-share
+
+on:
+  schedule:
+    - cron: "0 23 * * *"   # 毎日 23:00 UTC = 日本時間 8:00（GitHubの混雑で数分〜数十分遅れることがあります）
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "集計日（例 20261003）。空なら前日"
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-dragapult-share
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: 日本語フォント
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk
+      - run: pip install -r requirements.txt
+      - name: 集計してDiscordに投稿
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          PAGE_URL: ${{ vars.PAGE_URL }}
+        run: |
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            python -m bot.main --date "${{ github.event.inputs.date }}"
+          else
+            python -m bot.main
+          fi
+      - name: 取得データと推移ページを保存
+        run: |
+          git config user.name "dragapult-bot"
+          git config user.email "dragapult-bot@users.noreply.github.com"
+          git add data docs
+          git diff --cached --quiet || git commit -m "update $(TZ=Asia/Tokyo date +%F)"
+          git push
