@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ドラパルト型別シェアの推移｜シティリーグ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#F3F2F7; --panel:#FFFFFF; --ink:#211C33; --sub:#6B6680; --line:#DCD9E6;
+  --yono:#4B4F73; --noko:#D9A21B; --basha:#D9542B; --yonoko:#8A7BC4; --crush:#8C97A3; --plain:#C9C3DD; --other:#E6E2EE;
+  --accent:#6C3FB8;
+  --num:"Barlow Condensed","Zen Kaku Gothic New",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16131F; --panel:#211D2D; --ink:#EDEAF5; --sub:#A39DB8; --line:#3A344B;
+    --yono:#8E93C4; --noko:#E8B83A; --basha:#EE7048; --yonoko:#A898E0; --crush:#A3ADB8; --plain:#5E5775; --other:#433D55;
+    --accent:#B08AF0;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16131F; --panel:#211D2D; --ink:#EDEAF5; --sub:#A39DB8; --line:#3A344B;
+  --yono:#8E93C4; --noko:#E8B83A; --basha:#EE7048; --yonoko:#A898E0; --crush:#A3ADB8; --plain:#5E5775; --other:#433D55;
+  --accent:#B08AF0;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",system-ui,-apple-system,"Hiragino Sans",sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:980px;margin:0 auto;padding:32px 20px 56px}
+header{display:grid;grid-template-columns:1fr auto;gap:8px 24px;align-items:end;margin-bottom:28px}
+h1{font-size:clamp(1.5rem,3.6vw,2.2rem);font-weight:900;margin:0;letter-spacing:.01em;line-height:1.25}
+.period{color:var(--sub);font-size:.92rem;margin:4px 0 0}
+.share{text-align:right}
+.share b{font-family:var(--num);font-weight:700;font-size:clamp(3rem,9vw,5rem);line-height:.9;color:var(--accent);display:block}
+.share span{font-size:.85rem;color:var(--sub)}
+section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 22px 18px;margin-bottom:18px}
+h2{font-size:1.08rem;font-weight:700;margin:0 0 4px}
+.note{color:var(--sub);font-size:.82rem;margin:0 0 16px}
+/* overall strip */
+.strip{display:flex;height:64px;border-radius:10px;overflow:hidden;margin:6px 0 14px}
+.strip div{display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--num);font-weight:600;font-size:1.05rem;min-width:0;white-space:nowrap;overflow:hidden}
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:8px 18px;margin:0;padding:0;list-style:none}
+.legend li{display:grid;grid-template-columns:14px 1fr auto;gap:10px;align-items:baseline;font-size:.9rem;border-bottom:1px dashed var(--line);padding:4px 0}
+.sw{width:14px;height:14px;border-radius:4px;align-self:center}
+.legend .v{font-family:var(--num);font-weight:600;font-size:1.05rem}
+.legend small{color:var(--sub);display:block;font-size:.76rem;line-height:1.3}
+/* toggle */
+.tabs{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;margin:0 0 12px;background:var(--bg)}
+.tabs button{font:inherit;font-size:.85rem;border:0;background:transparent;color:var(--sub);padding:5px 14px;border-radius:999px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--panel);color:var(--ink);font-weight:700;box-shadow:0 0 0 1px var(--line)}
+.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chart{width:100%;overflow-x:auto}
+svg text{font-family:inherit}
+/* daily bars */
+.rows{display:grid;gap:10px}
+.row{display:grid;grid-template-columns:92px 1fr 70px;gap:12px;align-items:center}
+.row .d{font-weight:700;font-size:.95rem;line-height:1.2}
+.row .d small{display:block;color:var(--sub);font-weight:400;font-size:.74rem}
+.bar{display:flex;height:30px;border-radius:7px;overflow:hidden;background:var(--bg)}
+.bar div{display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--num);font-weight:600;font-size:.88rem;min-width:0;overflow:hidden;white-space:nowrap}
+.row .s{text-align:right;font-family:var(--num);font-weight:600;font-size:1.15rem;line-height:1.1}
+.row .s small{display:block;font-family:"Zen Kaku Gothic New",sans-serif;color:var(--sub);font-weight:400;font-size:.72rem}
+.row.weak .bar{opacity:.55}
+.row.weak .d{color:var(--sub)}
+/* table */
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:680px;font-size:.88rem}
+th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-weight:700;color:var(--sub);font-size:.8rem}
+tbody td{font-family:var(--num);font-size:1rem}
+tbody td:first-child{font-family:inherit;font-size:.88rem;font-weight:700}
+tr.total td{font-weight:700;border-top:2px solid var(--ink)}
+.defs{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px 22px;font-size:.86rem;margin:0;padding:0;list-style:none}
+.defs li{display:grid;grid-template-columns:14px 1fr;gap:10px;padding:5px 0}
+footer{color:var(--sub);font-size:.78rem;margin-top:22px;line-height:1.7}
+@media (max-width:560px){
+  header{grid-template-columns:1fr}
+  .share{text-align:left}
+  .row{grid-template-columns:64px 1fr 54px;gap:8px}
+  .bar div{font-size:.74rem}
+}
+@media (prefers-reduced-motion:no-preference){
+  .strip div{animation:grow .7s cubic-bezier(.2,.7,.2,1) both}
+  @keyframes grow{from{flex-grow:0;opacity:.3}}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>ドラパルトの型別シェアの推移</h1>
+      <p class="period" id="period"></p>
+    </div>
+    <div class="share"><b id="sharebig"></b><span>入賞デッキに占めるドラパルト</span></div>
+  </header>
+
+  <section aria-labelledby="h-trend">
+    <h2 id="h-trend">型の割合の推移</h2>
+    <p class="note">ドラパルト内の割合。会場が10未満の日（主に平日）は白抜きの点で、参考値です。</p>
+    <div class="tabs" role="group" aria-label="表示する日">
+      <button type="button" data-mode="weekend" aria-pressed="true">週末・祝日のみ</button>
+      <button type="button" data-mode="all" aria-pressed="false">全日</button>
+    </div>
+    <div class="chart" id="trend"></div>
+  </section>
+
+  <section aria-labelledby="h-all">
+    <h2 id="h-all">全期間の型別内訳</h2>
+    <p class="note" id="allnote"></p>
+    <div class="strip" id="strip" role="img" aria-label="ドラパルト全体の型別内訳"></div>
+    <ul class="legend" id="legend"></ul>
+  </section>
+
+  <section aria-labelledby="h-win">
+    <h2 id="h-win">型別の勝率と構築（シーズン累計）</h2>
+    <p class="note">トナメ勝率＝TOP8からの勝ち抜き戦での試合の勝率。TOP8→TOP4＝TOP8に入ったうちTOP4に進んだ割合。どちらも基準値50%。件数が20未満の型は参考値です。</p>
+    <div class="tbl"><table id="wintbl" style="min-width:520px"></table></div>
+    <p class="note" style="margin:16px 0 0" id="build"></p>
+  </section>
+
+  <section aria-labelledby="h-share">
+    <h2 id="h-share">ドラパルトのシェア推移</h2>
+    <p class="note">その日の入賞デッキ全体に占めるドラパルトの割合。</p>
+    <div class="chart" id="sharechart"></div>
+  </section>
+
+  <section aria-labelledby="h-daily">
+    <h2 id="h-daily">日ごとの内訳</h2>
+    <p class="note">バーはドラパルト内の割合、右の数字はその日のドラパルトのシェア。</p>
+    <div class="rows" id="rows"></div>
+  </section>
+
+  <section aria-labelledby="h-tbl">
+    <h2 id="h-tbl">日ごとの件数</h2>
+    <p class="note">括弧内はドラパルト内の割合。</p>
+    <div class="tbl"><table id="tbl"></table></div>
+  </section>
+
+  <section aria-labelledby="h-def">
+    <h2 id="h-def">型の判定ルール</h2>
+    <p class="note">上から順に当てはめ、最初に該当した型に分類しています。</p>
+    <ul class="defs" id="defs"></ul>
+  </section>
+
+  <footer>
+    集計元：ポケカ飯（シティリーグ優勝＆入賞デッキまとめ）。型の分類は各デッキの公式デッキコードから採用カードを確認して判定し、ポケカブックの分類とも照合しています。デッキコード未掲載のデッキはポケカ飯の表記に従っています。
+  </footer>
+</div>
+
+<script>
+const TYPES=[
+ {k:'yono',  n:'ヨノワール型', c:'--yono',  def:'ヨノワール入り（ポケカ飯の「ボム」）'},
+ {k:'noko',  n:'ノココッチ型', c:'--noko',  def:'ノココッチ入り'},
+ {k:'basha', n:'バシャーモ型', c:'--basha', def:'バシャーモex入り（最優先）'},
+ {k:'yonoko',n:'ヨノ＋ノコ型', c:'--yonoko',def:'ヨノワールとノココッチの両方入り'},
+ {k:'crush', n:'クラハン型',   c:'--crush', def:'上記なしでクラッシュハンマー入り'},
+ {k:'plain', n:'無印',         c:'--plain', def:'上記のどれも入っていない'},
+ {k:'other', n:'その他',       c:'--other', def:'ドデカバシ型・メノコマシラ型'}
+];
+const DEF_ORDER=['basha','yonoko','yono','noko','crush','plain','other'];
+const DAYS=__DAYS_JSON__;
+DAYS.forEach(x=>{x.n=x.c.reduce((a,b)=>a+b,0); x.weak=x.v<10;});
+const UPDATED='__UPDATED__';
+const TOT=TYPES.map((_,i)=>DAYS.reduce((s,x)=>s+x.c[i],0));
+const TOTN=TOT.reduce((a,b)=>a+b,0), TOTT=DAYS.reduce((s,x)=>s+x.t,0);
+const CY=DAYS.reduce((s,x)=>s+x.cy,0), CN=DAYS.reduce((s,x)=>s+x.cn,0);
+const pct=(a,b,dg=1)=>b?(a/b*100).toFixed(dg):'0.0';
+document.getElementById('period').textContent=`シティリーグ（オープン）${DAYS[0].d}〜${DAYS[DAYS.length-1].d}｜TOP16入賞 ${TOTT.toLocaleString()}デッキ中 ${TOTN}デッキ｜${UPDATED}更新`;
+document.getElementById('sharebig').textContent=pct(TOTN,TOTT)+'%';
+document.getElementById('allnote').textContent=`ドラパルト${TOTN}デッキを100%としたときの割合。型は採用カードから判定しています。`;
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const esc=s=>String(s);
+
+// overall strip + legend
+const strip=document.getElementById('strip'), legend=document.getElementById('legend');
+TYPES.forEach((t,i)=>{
+  const p=TOT[i]/TOTN*100;
+  const el=document.createElement('div');
+  el.style.flex=`${p} 1 0`; el.style.background=`var(${t.c})`;
+  if(t.k==='other'||t.k==='plain') el.style.color='var(--ink)';
+  el.textContent=p>=6?p.toFixed(1)+'%':'';
+  el.title=`${t.n} ${TOT[i]}件（${p.toFixed(1)}%）`;
+  strip.appendChild(el);
+  const li=document.createElement('li');
+  let sub='';
+  if(t.k==='yono') sub=`うちクラハン入り ${CY}件`;
+  if(t.k==='noko') sub=`うちクラハン入り ${CN}件`;
+  li.innerHTML=`<span class="sw" style="background:var(${t.c})"></span><span>${t.n}${sub?`<small>${sub}</small>`:''}</span><span class="v">${p.toFixed(1)}%<small style="text-align:right">${TOT[i]}件</small></span>`;
+  legend.appendChild(li);
+});
+
+// line chart helper
+function lineChart(el,{series,days,yMax,yStep,unit,h=300}){
+  const W=900,H=h,m={l:44,r:110,t:16,b:40};
+  const iw=W-m.l-m.r, ih=H-m.t-m.b;
+  const x=i=>m.l+(days.length===1?iw/2:i*iw/(days.length-1));
+  const y=v=>m.t+ih-(v/yMax)*ih;
+  const line=css('--line'), sub=css('--sub'), ink=css('--ink'), panel=css('--panel');
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:560px;display:block" role="img" aria-label="推移グラフ">`;
+  for(let v=0;v<=yMax;v+=yStep){
+    s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(v)}" y2="${y(v)}" stroke="${line}" stroke-width="1"/>`;
+    s+=`<text x="${m.l-8}" y="${y(v)+4}" text-anchor="end" font-size="12" fill="${sub}">${v}${unit}</text>`;
+  }
+  days.forEach((d,i)=>{
+    s+=`<text x="${x(i)}" y="${H-16}" text-anchor="middle" font-size="13" font-weight="700" fill="${d.weak?sub:ink}">${d.d}</text>`;
+    s+=`<text x="${x(i)}" y="${H-2}" text-anchor="middle" font-size="11" fill="${sub}">${d.w}・${d.v}会場</text>`;
+  });
+  const labels=[];
+  series.forEach(se=>{
+    const col=css(se.c);
+    const pts=days.map((d,i)=>[x(i),y(se.v(d))]);
+    s+=`<polyline fill="none" stroke="${col}" stroke-width="${se.w||3}" stroke-linejoin="round" stroke-linecap="round" points="${pts.map(p=>p.join(',')).join(' ')}"/>`;
+    days.forEach((d,i)=>{
+      const val=se.v(d);
+      s+=`<circle cx="${pts[i][0]}" cy="${pts[i][1]}" r="${d.weak?4:5.5}" fill="${d.weak?panel:col}" stroke="${col}" stroke-width="2.5"><title>${d.d} ${se.n} ${val.toFixed(1)}${unit}</title></circle>`;
+      if(!d.weak && se.vals!==false) s+=`<text x="${pts[i][0]}" y="${pts[i][1]-10}" text-anchor="middle" font-size="12" font-weight="700" fill="${col}">${val.toFixed(1)}</text>`;
+    });
+    labels.push({n:se.n,col,y:pts[pts.length-1][1]});
+  });
+  labels.sort((a,b)=>a.y-b.y);
+  for(let i=1;i<labels.length;i++) if(labels[i].y-labels[i-1].y<16) labels[i].y=labels[i-1].y+16;
+  labels.forEach(l=>{s+=`<text x="${W-m.r+12}" y="${l.y+4}" font-size="13" font-weight="700" fill="${l.col}">${l.n}</text>`;});
+  el.innerHTML=s+'</svg>';
+}
+let mode='weekend';
+function drawTrend(){
+  const days=mode==='weekend'?DAYS.filter(d=>!d.weak):DAYS; if(!days.length) return;
+  const ser=[0,1,2].map(i=>({n:TYPES[i].n,c:TYPES[i].c,v:d=>d.c[i]/d.n*100}));
+  lineChart(document.getElementById('trend'),{series:ser,days,yMax:70,yStep:10,unit:'%'});
+  lineChart(document.getElementById('sharechart'),{series:[{n:'ドラパルト',c:'--accent',v:d=>d.n/d.t*100}],days,yMax:40,yStep:10,unit:'%',h:240});
+}
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{
+  mode=b.dataset.mode;
+  document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));
+  drawTrend();
+}));
+
+// daily rows
+const rows=document.getElementById('rows');
+DAYS.forEach(d=>{
+  const r=document.createElement('div'); r.className='row'+(d.weak?' weak':'');
+  const segs=TYPES.map((t,i)=>{const p=d.c[i]/d.n*100; if(!p) return ''; const dark=(t.k==='other'||t.k==='plain');
+    return `<div style="flex:${p} 1 0;background:var(${t.c});${dark?'color:var(--ink)':''}" title="${t.n} ${d.c[i]}件（${p.toFixed(1)}%）">${p>=9?Math.round(p)+'%':''}</div>`}).join('');
+  r.innerHTML=`<div class="d">${d.d}（${d.w}）<small>${d.v}会場・${d.n}件</small></div><div class="bar" role="img" aria-label="${d.d}の型別内訳">${segs}</div><div class="s">${pct(d.n,d.t)}%<small>${d.n}/${d.t}</small></div>`;
+  rows.appendChild(r);
+});
+
+// table
+const tbl=document.getElementById('tbl');
+let th=`<thead><tr><th>日付</th><th>シェア</th>${TYPES.map(t=>`<th>${t.n}</th>`).join('')}</tr></thead><tbody>`;
+DAYS.forEach(d=>{th+=`<tr><td>${d.d}（${d.w}）</td><td>${pct(d.n,d.t)}%</td>${d.c.map(v=>`<td>${v}<span style="color:var(--sub);font-size:.82em">（${pct(v,d.n)}%）</span></td>`).join('')}</tr>`;});
+th+=`<tr class="total"><td>合計</td><td>${pct(TOTN,TOTT)}%</td>${TOT.map(v=>`<td>${v}<span style="color:var(--sub);font-size:.82em">（${pct(v,TOTN)}%）</span></td>`).join('')}</tr></tbody>`;
+tbl.innerHTML=th;
+
+// definitions
+const defs=document.getElementById('defs');
+DEF_ORDER.forEach(k=>{const t=TYPES.find(x=>x.k===k); const li=document.createElement('li');
+  li.innerHTML=`<span class="sw" style="background:var(${t.c})"></span><span><b>${t.n}</b>：${t.def}</span>`; defs.appendChild(li);});
+
+
+// win rate & construction
+const STATS=__STATS_JSON__;
+(function(){
+  const t=document.getElementById('wintbl');
+  let h='<thead><tr><th>型</th><th>TOP8入り</th><th>トナメ勝率</th><th>TOP8→TOP4</th></tr></thead><tbody>';
+  STATS.groups.filter(g=>g.n8>0).forEach(g=>{const few=g.n8<20; const wr=g.w+g.l?(g.w/(g.w+g.l)*100).toFixed(1)+'%':'—';
+    h+=`<tr style="${few?'color:var(--sub)':''}"><td>${g.name}${few?'（参考）':''}</td><td>${g.n8}</td><td style="font-weight:700">${wr}</td><td>${(g.t4/g.n8*100).toFixed(1)}%</td></tr>`;});
+  t.innerHTML=h+'</tbody>';
+  const s1=STATS.sam['1']||0,s2=STATS.sam['2']||0,c3=STATS.ch['3']||0,c4=STATS.ch['4']||0;
+  const b=[];
+  if(s1+s2) b.push(`ヨノワール型のサマヨール：1枚 ${pct(s1,s1+s2)}%／2枚 ${pct(s2,s1+s2)}%（${s1+s2}件）`);
+  if(c3+c4) b.push(`ノココッチ型のクラハン：4枚 ${pct(c4,c3+c4)}%／3枚 ${pct(c3,c3+c4)}%（${c3+c4}件）`);
+  document.getElementById('build').textContent=b.join('　｜　')+(b.length?'　※サマヨール0・3・4枚、クラハン2枚以下は外れ値として除外':'');
+})();
+drawTrend();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawTrend);
+</script>
+</body>
+</html>
